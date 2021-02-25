@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.sql.ConnectionEventListener;
 import javax.sql.StatementEventListener;
 
+import com.alibaba.druid.DbType;
 import com.alibaba.druid.pool.DruidAbstractDataSource.PhysicalConnectionInfo;
 import com.alibaba.druid.proxy.jdbc.WrapperProxy;
 import com.alibaba.druid.support.logging.Log;
@@ -51,6 +52,7 @@ public final class DruidConnectionHolder {
     protected final List<StatementEventListener>  statementEventListeners  = new CopyOnWriteArrayList<StatementEventListener>();
     protected final long                          connectTimeMillis;
     protected volatile long                       lastActiveTimeMillis;
+    protected volatile long                       lastExecTimeMillis;
     protected volatile long                       lastKeepTimeMillis;
     protected volatile long                       lastValidTimeMillis;
     protected long                                useCount                 = 0;
@@ -67,10 +69,12 @@ public final class DruidConnectionHolder {
     protected int                                 underlyingHoldability;
     protected int                                 underlyingTransactionIsolation;
     protected boolean                             underlyingAutoCommit;
-    protected boolean                             discard                  = false;
+    protected volatile boolean                    discard                  = false;
+    protected volatile boolean                    active                   = false;
     protected final Map<String, Object>           variables;
     protected final Map<String, Object>           globleVariables;
     final ReentrantLock                           lock                     = new ReentrantLock();
+    protected String                              initSchema;
 
     public DruidConnectionHolder(DruidAbstractDataSource dataSource, PhysicalConnectionInfo pyConnectInfo)
                                                                                                           throws SQLException{
@@ -97,6 +101,7 @@ public final class DruidConnectionHolder {
 
         this.connectTimeMillis = System.currentTimeMillis();
         this.lastActiveTimeMillis = connectTimeMillis;
+        this.lastExecTimeMillis   = connectTimeMillis;
 
         this.underlyingAutoCommit = conn.getAutoCommit();
 
@@ -108,10 +113,11 @@ public final class DruidConnectionHolder {
 
         {
             boolean initUnderlyHoldability = !holdabilityUnsupported;
-            if (JdbcConstants.SYBASE.equals(dataSource.dbType) //
-                || JdbcConstants.DB2.equals(dataSource.dbType) //
-                || JdbcConstants.HIVE.equals(dataSource.dbType) //
-                || JdbcConstants.ODPS.equals(dataSource.dbType) //
+            DbType dbType = DbType.of(dataSource.dbTypeName);
+            if (dbType == DbType.sybase //
+                    || dbType == DbType.db2 //
+                    || dbType == DbType.hive //
+                    || dbType == DbType.odps //
             ) {
                 initUnderlyHoldability = false;
             }
@@ -153,6 +159,10 @@ public final class DruidConnectionHolder {
         this.defaultReadOnly = underlyingReadOnly;
     }
 
+    public long getConnectTimeMillis() {
+        return connectTimeMillis;
+    }
+
     public boolean isUnderlyingReadOnly() {
         return underlyingReadOnly;
     }
@@ -191,6 +201,14 @@ public final class DruidConnectionHolder {
 
     public void setLastActiveTimeMillis(long lastActiveMillis) {
         this.lastActiveTimeMillis = lastActiveMillis;
+    }
+
+    public long getLastExecTimeMillis() {
+        return lastExecTimeMillis;
+    }
+
+    public void setLastExecTimeMillis(long lastExecTimeMillis) {
+        this.lastExecTimeMillis = lastExecTimeMillis;
     }
 
     public void addTrace(DruidPooledStatement stmt) {
