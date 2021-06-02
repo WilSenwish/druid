@@ -48,6 +48,34 @@ public class HiveResourceTest extends TestCase {
         exec_test("bvt/parser/hive-3.txt");
     }
 
+    public void test_4() throws Exception {
+        exec_test("bvt/parser/hive-4.txt");
+    }
+
+    public void test_5() throws Exception {
+        exec_test("bvt/parser/hive-5.txt");
+    }
+
+    public void test_6() throws Exception {
+        exec_test("bvt/parser/hive-6.txt");
+    }
+
+    public void test_7() throws Exception {
+        exec_test("bvt/parser/hive-7.txt");
+    }
+
+    public void test_8() throws Exception {
+        exec_test("bvt/parser/hive-8.txt");
+    }
+
+    public void test_9() throws Exception {
+        exec_test("bvt/parser/hive-9.txt");
+    }
+
+    public void test_10() throws Exception {
+        exec_test("bvt/parser/hive-10.txt");
+    }
+
     public void exec_test(String resource) throws Exception {
 //        System.out.println(resource);
         InputStream is = null;

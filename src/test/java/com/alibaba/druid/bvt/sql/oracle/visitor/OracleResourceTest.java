@@ -89,6 +89,18 @@ public class OracleResourceTest extends OracleTest {
         exec_test("bvt/parser/oracle-60.txt");
     }
 
+    public void test_61() throws Exception {
+        // exec_test("bvt/parser/oracle-61.txt");
+    }
+
+    public void test_62() throws Exception {
+         exec_test("bvt/parser/oracle-62.txt");
+    }
+
+    public void test_63() throws Exception {
+         exec_test("bvt/parser/oracle-63.txt");
+    }
+
     public void exec_test(String resource) throws Exception {
         System.out.println(resource);
         InputStream is = null;
@@ -131,7 +143,8 @@ public class OracleResourceTest extends OracleTest {
         if (statementList.size() == 1) {
             SQLStatement stmt = statementList.get(0);
             if (expect != null && !expect.isEmpty()) {
-                assertEquals(expect, stmt.toString());
+                String actual = stmt.toString();
+                assertEquals(expect, actual.trim());
             }
         } else {
             if (expect != null && !expect.isEmpty()) {

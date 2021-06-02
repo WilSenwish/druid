@@ -3,6 +3,8 @@ package com.alibaba.druid.sql.parser;
 public enum SQLType {
     SELECT,
     UPDATE,
+    INSERT_SELECT,
+    INSERT_VALUES,
     INSERT,
     DELETE,
     MERGE,
@@ -36,8 +38,23 @@ public enum SQLType {
     REMOVE_USER,
 
     CREATE_USER,
+    CREATE_TABLE,
+    CREATE_TABLE_AS_SELECT,
+    CREATE_VIEW,
+    CREATE_FUNCTION,
+    CREATE_ROLE,
     DROP_USER,
+    DROP_TABLE,
+    DROP_VIEW,
+    DROP_FUNCTION,
+    DROP_RESOURCE,
     ALTER_USER,
+    ALTER_TABLE,
+    READ,
+
+    ADD_TABLE,
+    TUNNEL_DOWNLOAD,
+    UPLOAD,
 
     UNKNOWN
 }

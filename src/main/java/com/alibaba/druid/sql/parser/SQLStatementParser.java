@@ -2051,6 +2051,11 @@ public class SQLStatementParser extends SQLParser {
                         SQLAlterTableSetLifecycle setLifecycle = new SQLAlterTableSetLifecycle();
                         setLifecycle.setLifecycle(this.exprParser.primary());
                         stmt.addItem(setLifecycle);
+                    } else if (lexer.identifierEquals(Constants.LOCATION)) {
+                        lexer.nextToken();
+                        SQLAlterTableSetLocation setLocation = new SQLAlterTableSetLocation();
+                        setLocation.setLocation(this.exprParser.primary());
+                        stmt.addItem(setLocation);
                     } else if (lexer.identifierEquals(FnvHash.Constants.TBLPROPERTIES)) {
                         lexer.nextToken();
                         SQLAlterTableSetOption setOption = new SQLAlterTableSetOption();
@@ -3575,6 +3580,7 @@ public class SQLStatementParser extends SQLParser {
                             if (name != null) {
                                 key.setName(name);
                             }
+                            key.setParent(stmt);
                             stmt.getTableElementList().add(key);
                         }
                         continue;
@@ -3947,9 +3953,7 @@ public class SQLStatementParser extends SQLParser {
             accept(Token.DATABASE);
         }
 
-
-
-        if (lexer.token == Token.IF) {
+        if (lexer.token == Token.IF || lexer.identifierEquals("IF")) {
             lexer.nextToken();
             accept(Token.NOT);
             accept(Token.EXISTS);
@@ -5896,6 +5900,9 @@ public class SQLStatementParser extends SQLParser {
         for (int i = 0; ; ++i) {
             int startPos = lexer.pos - 1;
 
+            if (lexer.token == Token.ROW) {
+                lexer.nextToken();
+            }
             if (lexer.token != Token.LPAREN) {
                 throw new ParserException("syntax error, expect ')', " + lexer.info());
             }

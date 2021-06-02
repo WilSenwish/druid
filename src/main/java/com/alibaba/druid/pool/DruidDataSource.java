@@ -870,6 +870,10 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 throw new SQLException("maxEvictableIdleTimeMillis must be grater than minEvictableIdleTimeMillis");
             }
 
+            if (keepAlive && keepAliveBetweenTimeMillis <= timeBetweenEvictionRunsMillis) {
+                throw new SQLException("keepAliveBetweenTimeMillis must be grater than timeBetweenEvictionRunsMillis");
+            }
+
             if (this.driverClass != null) {
                 this.driverClass = driverClass.trim();
             }
@@ -2104,6 +2108,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 filter.destroy();
             }
         } finally {
+            this.closing = false;
             lock.unlock();
         }
 
@@ -2149,7 +2154,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
     }
 
     boolean putLast(DruidConnectionHolder e, long lastActiveTimeMillis) {
-        if (poolingCount >= maxActive || e.discard) {
+        if (poolingCount >= maxActive || e.discard || this.closed) {
             return false;
         }
 
@@ -2503,6 +2508,10 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
     private boolean put(DruidConnectionHolder holder, long createTaskId) {
         lock.lock();
         try {
+            if (this.closing || this.closed) {
+                return false;
+            }
+
             if (poolingCount >= maxActive) {
                 if (createScheduler != null) {
                     clearCreateTask(createTaskId);
@@ -2778,7 +2787,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                     lastCreateError = e;
                     lastErrorTimeMillis = System.currentTimeMillis();
 
-                    if (!closing) {
+                    if ((!closing) && (!closed)) {
                         LOG.error("create connection Thread Interrupted, url: " + jdbcUrl, e);
                     }
                     break;
@@ -2859,7 +2868,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
             for (;;) {
                 // 从前面开始删除
                 try {
-                    if (closed) {
+                    if (closed || closing) {
                         break;
                     }
 

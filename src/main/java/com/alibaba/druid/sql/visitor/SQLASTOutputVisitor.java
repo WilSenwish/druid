@@ -2999,7 +2999,7 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
         }
 
         if (param instanceof Number //
-            || param instanceof Boolean) {
+            || param instanceof Boolean || param instanceof java.time.temporal.Temporal ) {
             print0(param.toString());
             return;
         }
@@ -3078,6 +3078,10 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
             }
         }
 
+        if (x.hasBeforeComment()) {
+            printlnComments(x.getBeforeCommentsDirect());
+        }
+
         print0(ucase ? "DROP " : "drop ");
         List<SQLCommentHint> hints = x.getHints();
         if (hints != null) {
@@ -3130,6 +3134,18 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
     }
 
     public boolean visit(SQLDropViewStatement x) {
+        List<SQLCommentHint> headHints = x.getHeadHintsDirect();
+        if (headHints != null) {
+            for (SQLCommentHint hint : headHints) {
+                visit((SQLCommentHint) hint);
+                println();
+            }
+        }
+
+        if (x.hasBeforeComment()) {
+            printlnComments(x.getBeforeCommentsDirect());
+        }
+
         print0(ucase ? "DROP VIEW " : "drop view ");
 
         if (x.isIfExists()) {
@@ -3886,6 +3902,16 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
 
     @Override
     public boolean visit(SQLSetStatement x) {
+        if(x.getHeadHintsDirect() != null) {
+            for (SQLCommentHint hint : x.getHeadHintsDirect()) {
+                hint.accept(this);
+            }
+        }
+
+        if (x.hasBeforeComment()) {
+            printlnComments(x.getBeforeCommentsDirect());
+        }
+
         boolean printSet = x.getAttribute("parser.set") == Boolean.TRUE || !JdbcUtils.isOracleDbType(dbType);
         if (printSet) {
             print0(ucase ? "SET " : "set ");
@@ -4808,7 +4834,7 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
 
     @Override
     public boolean visit(SQLAlterSystemGetConfigStatement x) {
-        print0(ucase ? "ALTER SYSTEM GET CONFIG " : "atler system get config ");
+        print0(ucase ? "ALTER SYSTEM GET CONFIG " : "alter system get config ");
         x.getName().accept(this);
 
         return false;
@@ -4816,7 +4842,7 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
 
     @Override
     public boolean visit(SQLAlterSystemSetConfigStatement x) {
-        print0(ucase ? "ALTER SYSTEM SET COFNIG " : "atler system set config ");
+        print0(ucase ? "ALTER SYSTEM SET COFNIG " : "alter system set config ");
 
         printAndAccept(x.getOptions(), " ");
 
@@ -4825,7 +4851,7 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
 
     @Override
     public boolean visit(SQLAlterViewStatement x) {
-        print0(ucase ? "ALTER " : "atler ");
+        print0(ucase ? "ALTER " : "alter ");
 
         this.indentCount++;
         String algorithm = x.getAlgorithm();
@@ -4844,7 +4870,7 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
 
         String sqlSecurity = x.getSqlSecurity();
         if (sqlSecurity != null && sqlSecurity.length() > 0) {
-            print0(ucase ? "SQL SECURITY = " : "sql security = ");
+            print0(ucase ? "SQL SECURITY " : "sql security ");
             print0(sqlSecurity);
             println();
         }
@@ -5938,6 +5964,18 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
 
     @Override
     public boolean visit(SQLDropFunctionStatement x) {
+        List<SQLCommentHint> headHints = x.getHeadHintsDirect();
+        if (headHints != null) {
+            for (SQLCommentHint hint : headHints) {
+                visit((SQLCommentHint) hint);
+                println();
+            }
+        }
+
+        if (x.hasBeforeComment()) {
+            printlnComments(x.getBeforeCommentsDirect());
+        }
+
         if (x.isTemporary()) {
             print0(ucase ? "DROP TEMPORARY FUNCTION " : "drop temporary function ");
         } else {
@@ -6538,6 +6576,13 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
     public boolean visit(SQLAlterTableSetLifecycle x) {
         print0(ucase ? "SET LIFECYCLE " : "set lifecycle ");
         x.getLifecycle().accept(this);
+        return false;
+    }
+
+    @Override
+    public boolean visit(SQLAlterTableSetLocation x) {
+        print0(ucase ? "SET LOCATION " : "set location ");
+        x.getLocation().accept(this);
         return false;
     }
 
